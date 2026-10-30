@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS AI Weather Anomaly Detection Sentinel</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <div class="app-wrapper">
+        <!-- Top Navigation Bar -->
+        <header class="app-navbar">
+            <div class="nav-brand">
+                <div class="brand-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+                        <path d="M12 12v4"/>
+                        <path d="M12 8h.01"/>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1>Weather Sentinel <span class="badge-ai">AI / ML</span></h1>
+                    <p class="brand-sub">Multi-Model Station Anomaly Detection System</p>
+                </div>
+            </div>
+
+            <div class="nav-actions">
+                <div id="apiStatusBadge" class="status-indicator checking" title="Checking Backend API Connection">
+                    <span class="indicator-dot"></span>
+                    <span id="apiStatusText">Connecting...</span>
+                </div>
+                <button id="themeToggleBtn" class="theme-toggle-btn" onclick="toggleTheme()" title="Switch Light / Dark Theme">
+                    <span class="theme-icon" id="themeIcon">🌙</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="main-container">
+            <!-- Search & Control Panel -->
+            <section class="search-panel">
+                <div class="search-box-wrapper">
+                    <div class="search-input-group">
+                        <span class="search-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"/>
+                                <path d="m21 21-4.3-4.3"/>
+                            </svg>
+                        </span>
+                        <input
+                            type="text"
+                            id="cityInput"
+                            placeholder="Enter any global city (e.g. Delhi, London, Tokyo, New York)..."
+                            autocomplete="off"
+                            onkeydown="handleSearchKey(event)"
+                        >
+                        <button id="clearInputBtn" class="clear-input-btn hidden" onclick="clearInput()" title="Clear input">✕</button>
+                    </div>
+
+                    <button id="analyzeBtn" class="btn-primary" onclick="analyzeCity()">
+                        <span id="btnText">Analyze Weather</span>
+                        <div id="btnSpinner" class="btn-spinner hidden"></div>
+                    </button>
+                </div>
+
+                <!-- Popular Cities Quick-Bar -->
+                <div class="quick-picks-row">
+                    <span class="quick-picks-label">Quick Demo:</span>
+                    <div class="quick-tags">
+                        <button class="quick-pill" onclick="quickSelectCity('Delhi')">🇮🇳 Delhi</button>
+                        <button class="quick-pill" onclick="quickSelectCity('London')">🇬🇧 London</button>
+                        <button class="quick-pill" onclick="quickSelectCity('Tokyo')">🇯🇵 Tokyo</button>
+                        <button class="quick-pill" onclick="quickSelectCity('New York')">🇺🇸 New York</button>
+                        <button class="quick-pill" onclick="quickSelectCity('Mumbai')">🇮🇳 Mumbai</button>
+                        <button class="quick-pill" onclick="quickSelectCity('Sydney')">🇦🇺 Sydney</button>
+                    </div>
+                </div>
+
+                <!-- Recent Searches Bar -->
+                <div id="recentSearchesContainer" class="recent-searches-container hidden">
+                    <span class="recent-label">Recent Searches:</span>
+                    <div id="recentSearchesList" class="recent-tags"></div>
+                </div>
+            </section>
+
+            <!-- Loading Indicator -->
+            <div id="loading" class="loading-card hidden">
+                <div class="pulsing-radar">
+                    <div class="radar-ping"></div>
+                </div>
+                <div class="loading-content">
+                    <h3>Analyzing Meteorological Satellite & Station Consensus...</h3>
+                    <p>Executing Isolation Forest ML & Peer-Deviation Ensemble across ERA5, GFS, Best-Match, and ICON models.</p>
+                </div>
+            </div>
+
+            <!-- Empty / Welcome State (Shown when no search is active) -->
+            <section id="welcomeState" class="welcome-card">
+                <div class="welcome-hero">
+                    <div class="hero-icon-cluster">
+                        <span class="floating-icon icon-1">🌦️</span>
+                        <span class="floating-icon icon-2">🤖</span>
+                        <span class="floating-icon icon-3">📊</span>
+                    </div>
+                    <h2>Welcome to AI Weather Sentinel</h2>
+                    <p class="hero-desc">
+                        Identify erroneous weather sensors, drift, and climate anomalies using high-dimensional 
+                        <strong>Isolation Forest Machine Learning</strong> combined with statistical 
+                        <strong>Peer-Deviation Consensus</strong> across major meteorological forecast models.
+                    </p>
+                    <div class="features-grid">
+                        <div class="feature-item">
+                            <span class="f-icon">🛰️</span>
+                            <h4>Multi-Model Ingestion</h4>
+                            <p>Ingests real-time ERA5, GFS, ICON, and Best-Match feeds.</p>
+                        </div>
+                        <div class="feature-item">
+                            <span class="f-icon">🧠</span>
+                            <h4>Unsupervised ML</h4>
+                            <p>Detects hidden multivariate discrepancies in temp, humidity, pressure, and wind.</p>
+                        </div>
+                        <div class="feature-item">
+                            <span class="f-icon">💾</span>
+                            <h4>Permanent Retention</h4>
+                            <p>Results persist permanently in local storage so your data never disappears.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Active Results Container (Shown when results are loaded) -->
+            <div id="resultsContainer" class="results-wrapper hidden">
+                
+                <!-- Persistent Status & Actions Banner -->
+                <div id="resultBanner" class="result-banner">
+                    <div class="banner-status-left">
+                        <span id="saveStatusIndicator" class="save-status-badge">● Saved in Browser (Permanent)</span>
+                        <span id="lastUpdatedTime" class="timestamp-text">Analysis active</span>
+                    </div>
+                    <div class="banner-actions-right">
+                        <button class="action-btn" onclick="refreshCurrentCity()" title="Fetch fresh weather data from satellite">
+                            <span class="action-icon">🔄</span> Re-analyze Live
+                        </button>
+                        <button class="action-btn" onclick="exportData('csv')" title="Download station table as CSV">
+                            <span class="action-icon">📥</span> Export CSV
+                        </button>
+                        <button class="action-btn" onclick="exportData('json')" title="Download full JSON report">
+                            <span class="action-icon">📋</span> Export JSON
+                        </button>
+                        <button class="action-btn btn-danger" onclick="clearCurrentResults()" title="Clear screen">
+                            <span class="action-icon">🗑</span> Clear
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Location Overview Header -->
+                <section id="locationCard" class="location-header-card">
+                    <div class="location-info-left">
+                        <div class="city-title-row">
+                            <h2 id="locationCityName">--</h2>
+                            <span id="locationCountryBadge" class="country-badge">--</span>
+                        </div>
+                        <p id="locationCoords" class="coords-subtitle">Latitude: -- | Longitude: --</p>
+                    </div>
+                    <div class="location-meta-right">
+                        <div class="meta-tag">
+                            <span class="meta-label">Detection Algorithm</span>
+                            <span class="meta-value">Isolation Forest + MAD</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Executive AI Insights Banner -->
+                <section id="aiInsightCard" class="ai-insight-card insight-normal">
+                    <div class="insight-icon" id="insightIcon">🟢</div>
+                    <div class="insight-body">
+                        <h4 id="insightTitle">Executive Consensus Summary</h4>
+                        <p id="insightMessage">Consensus analysis underway...</p>
+                    </div>
+                </section>
+
+                <!-- Summary Metrics Dashboard -->
+                <section class="dashboard-grid">
+                    <div class="metric-card card-total">
+                        <div class="metric-header">
+                            <span class="metric-title">Total Sources</span>
+                            <span class="metric-icon-badge">📡</span>
+                        </div>
+                        <div class="metric-value-row">
+                            <span id="totalStations" class="metric-number">0</span>
+                            <span class="metric-unit">models</span>
+                        </div>
+                        <div class="metric-progress-bar">
+                            <div class="progress-fill fill-total" style="width: 100%;"></div>
+                        </div>
+                        <span class="metric-caption">Meteorological Feeds Ingested</span>
+                    </div>
+
+                    <div class="metric-card card-normal">
+                        <div class="metric-header">
+                            <span class="metric-title">Consensus Normal</span>
+                            <span class="metric-icon-badge">🟢</span>
+                        </div>
+                        <div class="metric-value-row">
+                            <span id="normalStations" class="metric-number">0</span>
+                            <span id="normalPercent" class="metric-sub-pct">0%</span>
+                        </div>
+                        <div class="metric-progress-bar">
+                            <div id="normalBar" class="progress-fill fill-normal" style="width: 0%;"></div>
+                        </div>
+                        <span class="metric-caption">Score &lt; 45 (In Good Agreement)</span>
+                    </div>
+
+                    <div class="metric-card card-suspicious">
+                        <div class="metric-header">
+                            <span class="metric-title">Suspicious Drift</span>
+                            <span class="metric-icon-badge">🟠</span>
+                        </div>
+                        <div class="metric-value-row">
+                            <span id="suspiciousStations" class="metric-number">0</span>
+                            <span id="suspiciousPercent" class="metric-sub-pct">0%</span>
+                        </div>
+                        <div class="metric-progress-bar">
+                            <div id="suspiciousBar" class="progress-fill fill-suspicious" style="width: 0%;"></div>
+                        </div>
+                        <span class="metric-caption">Score 45 - 69 (Moderate Deviation)</span>
+                    </div>
+
+                    <div class="metric-card card-anomalous">
+                        <div class="metric-header">
+                            <span class="metric-title">Critical Anomalies</span>
+                            <span class="metric-icon-badge">🔴</span>
+                        </div>
+                        <div class="metric-value-row">
+                            <span id="anomalousStations" class="metric-number">0</span>
+                            <span id="anomalousPercent" class="metric-sub-pct">0%</span>
+                        </div>
+                        <div class="metric-progress-bar">
+                            <div id="anomalousBar" class="progress-fill fill-anomalous" style="width: 0%;"></div>
+                        </div>
+                        <span class="metric-caption">Score ≥ 70 (Severe Outlier)</span>
+                    </div>
+                </section>
+
+                <!-- Interactive Table Section with Filter Tabs -->
+                <section class="section-card table-section">
+                    <div class="section-header-row">
+                        <div>
+                            <h3 class="section-title">Weather Source Analysis</h3>
+                            <p class="section-subtitle">Comparative sensor and forecast model observations</p>
+                        </div>
+                        <div class="table-filter-tabs">
+                            <button class="filter-tab active" onclick="setTableFilter('all')">All (<span id="filterCountAll">0</span>)</button>
+                            <button class="filter-tab tab-normal" onclick="setTableFilter('normal')">Normal (<span id="filterCountNormal">0</span>)</button>
+                            <button class="filter-tab tab-suspicious" onclick="setTableFilter('suspicious')">Suspicious (<span id="filterCountSuspicious">0</span>)</button>
+                            <button class="filter-tab tab-anomalous" onclick="setTableFilter('anomalous')">Anomalous (<span id="filterCountAnomalous">0</span>)</button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>Source / Model</th>
+                                    <th>Temperature</th>
+                                    <th>Humidity</th>
+                                    <th>Wind Speed</th>
+                                    <th>Pressure</th>
+                                    <th>Rainfall</th>
+                                    <th>Anomaly Score</th>
+                                    <th>Consensus Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="weatherTable">
+                                <!-- Dynamic Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Multi-View Comparison Chart Section -->
+                <section class="section-card chart-section">
+                    <div class="section-header-row">
+                        <div>
+                            <h3 class="section-title">Model Comparative Visualizations</h3>
+                            <p class="section-subtitle">Cross-source variance and anomaly scoring breakdown</p>
+                        </div>
+                        <div class="chart-view-tabs">
+                            <button id="chartTabAnomaly" class="chart-tab active" onclick="switchChartView('anomaly')">Anomaly Scores</button>
+                            <button id="chartTabTemp" class="chart-tab" onclick="switchChartView('temperature')">Temperature</button>
+                            <button id="chartTabPressure" class="chart-tab" onclick="switchChartView('pressure')">Pressure & Wind</button>
+                        </div>
+                    </div>
+
+                    <div class="chart-canvas-wrapper">
+                        <canvas id="anomalyChart"></canvas>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>AWS AI Weather Anomaly Detection System &bull; Powered by Open-Meteo & Scikit-Learn Isolation Forest</p>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="app.js"></script>
+</body>
+
+</html>
